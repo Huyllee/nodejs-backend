@@ -57,6 +57,63 @@ let getBodyHTMLEmail = (dataSend) => {
     return result;
 }
 
+let getBodyHTMLEmailRemedy = (dataSend) => {
+    let result = '';
+    if (dataSend.language === 'vi') {
+        result = `
+            <h3>Xin chào ${dataSend.patientName}</h3>
+            <p>Bạn nhận được email này vì đã đặt lịch khám bệnh online trên Huy Lee</p>
+            <p>Thông tin đơn thuốc/hóa đơn được gửi trong file đính kèm</p>
+            <br/>
+            <img src="https://cldup.com/D72zpdwI-i.gif" width="500" height="350"/>
+            
+            <div>Xin chân thành cảm ơn!</div>
+            `
+    }
+    if (dataSend.language === 'en') {
+        result = `
+            <h3>Dear ${dataSend.patientName}</h3>
+            <p>You received this email because you booked an online medical appointment on Huy Lee</p>
+            <p>Prescription/invoice information is included in the attached file</p>
+            <br/>
+            <img src="https://cldup.com/D72zpdwI-i.gif" width="500" height="350"/>
+            
+            <div>Sincerely thank you!</div>
+            `
+    }
+    return result;
+}
+
+let sendAttachment = async (dataSend) => {
+    const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL_APP,
+            pass: process.env.EMAIL_APP_PASSWORD
+        }
+    });
+
+
+    // send mail with defined transport object
+    const info = await transporter.sendMail({
+        from: '"Huy Lee 👻" <huyleeclone@gmail.com>', // sender address
+        to: dataSend.email, // list of receivers
+        subject: "Kết quả đặt lịch khám bệnh", // Subject line
+        text: "Hello world?", // plain text body
+        html: getBodyHTMLEmailRemedy(dataSend), // html body
+        attachments: [
+            {   // encoded string as an attachment
+                filename: `remedy-${dataSend.patientId}-${new Date().getTime()}.png`,
+                content: dataSend.imgBase64.split('base64,')[1],
+                encoding: 'base64'
+            },
+        ]
+    });
+}
+
 module.exports = {
-    sendSimpleEmail: sendSimpleEmail
+    sendSimpleEmail: sendSimpleEmail,
+    sendAttachment: sendAttachment
 }
